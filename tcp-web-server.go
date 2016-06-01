@@ -8,6 +8,7 @@ import (
 var ADDR = "127.0.0.1:8080"
 
 func main() {
+	listen()
 }
 
 func listen() {
