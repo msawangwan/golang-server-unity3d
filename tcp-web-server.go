@@ -18,13 +18,14 @@ func listen() {
 		log.Fatal("Error Opening Listener Socket:", err)
 	}
 
+	log.Println("Accepting Connections on:", ADDR)
+
 	defer sock.Close()
 	for {
 		conn, err := sock.Accept()
 
-		if err != null {
+		if err != nil {
 			log.Fatal("Error Accepting Client Connection:", err)
-			return
 		}
 
 		go handleClient(conn)
@@ -43,7 +44,7 @@ func handleClient(conn net.Conn) {
 	data := buffer[:dataSize]
 	parseData(data)
 
-	conn.Write([]byte("Data Recieved."))
+	conn.Write([]byte("Reply From Server: Data Recieved."))
 }
 
 func parseData(data []byte) {
