@@ -4,9 +4,10 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
-var ADDR = "127.0.0.1:8080"
+var ADDR = ":9080"
 
 func main() {
 	listen()
@@ -29,8 +30,13 @@ func listen() {
 			log.Fatal("Error Accepting Client Connection:", err)
 		}
 
-		go handleClient(conn)
+		go handleClientStream(conn)
 	}
+}
+
+func handleClientStream(conn net.Conn) {
+	readStream(conn)
+	conn.Write([]byte("Reply"))
 }
 
 func handleClient(conn net.Conn) {
@@ -52,35 +58,51 @@ func parseData(data []byte) string {
 	return string(data)
 }
 
-func receiveVarSizedData(conn net.Conn) []byte {
-	totalRecv := 0
-	totalLeft := 0
+var timeoutCount = 0
 
-	expectedSize := make([]byte, 4)
-	bufferSize, err := conn.Read(expectedSize)
+func readStream(conn net.Conn) {
+	ch := make(chan []byte)
+	chErr := make(chan error)
 
-	if err != nil {
-		log.Fatal("Error reading buffer size:", err)
-	}
+	go func(ch chan []byte, chErr chan error) {
+		for {
+			data := make([]byte, 512)
+			_, err := conn.Read(data)
 
-	dataBuffer := make([]byte, 0, bufferSize)
-	tmpBuffer := make([]byte, 32)
-
-	for totalRecv < bufferSize {
-		recv, err := conn.Read(tmpBuffer)
-
-		if err != nil {
-			if err != io.EOF {
-				log.Fatal("Error receiving buffered data:", err)
+			if err != nil {
+				chErr <- err
+				return
 			}
+
+			ch <- data
+		}
+	}(ch, chErr) // <- to research
+
+	ticker := time.Tick(time.Second)
+
+	isOver := false
+	for {
+		select {
+		case data := <-ch:
+			log.Println(parseData(data))
+		case err := <-chErr:
+			log.Println(err)
+
+			if err == io.EOF {
+				isOver = true
+			}
+
 			break
+		case <-ticker:
+			timeoutCount++
+			log.Println("timeout ...", timeoutCount)
 		}
 
-		dataBuffer = append(dataBuffer, tmpBuffer[:recv]...)
-
-		totalRecv += recv
-		totalLeft -= recv
+		if isOver == true {
+			timeoutCount = 0
+			close(ch)
+			close(chErr)
+			break
+		}
 	}
-
-	return dataBuffer
 }
