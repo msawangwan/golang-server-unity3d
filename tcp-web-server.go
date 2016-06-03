@@ -1,18 +1,34 @@
 package main
 
 import (
-	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
-var ADDR = ":9080"
+const (
+	ADDR = ":9080"
+)
+
+type DataPacket struct {
+	data []byte
+	size int
+}
+
+func (dp DataPacket) parse() string {
+	return string(dp.data[:dp.size])
+}
+
+func init() {
+	log.SetOutput(os.Stdout)
+}
 
 func main() {
 	listen()
 }
 
+/* Listens for incoming client connections and handles them via goroutines. */
 func listen() {
 	sock, err := net.Listen("tcp", ADDR)
 
@@ -34,74 +50,61 @@ func listen() {
 	}
 }
 
+/* Moderates conversation with connected client. */
 func handleClientStream(conn net.Conn) {
+	defer conn.Close()
+
 	readStream(conn)
 	conn.Write([]byte("Reply"))
 }
 
-func handleClient(conn net.Conn) {
-	buffer := make([]byte, 1500)
-
-	dataSize, err := conn.Read(buffer)
-
-	if err != nil {
-		log.Fatal("Error Reading Buffer:", err)
-	}
-
-	data := buffer[:dataSize]
-	parseData(data)
-
-	conn.Write([]byte("Reply From Server: Data Recieved."))
-}
-
-func parseData(data []byte) string {
-	return string(data)
-}
-
-var timeoutCount = 0
-
+/* Reads data from a stream once a client establishes a connection. */
 func readStream(conn net.Conn) {
-	ch := make(chan []byte)
-	chErr := make(chan error)
+	isOver := false
+	timeoutCount := 0
 
-	go func(ch chan []byte, chErr chan error) {
+	readChan := make(chan DataPacket)
+	errChan := make(chan error)
+
+	go func(readChan chan DataPacket, errChan chan error) {
 		for {
+			log.Println("Reading Stream ....")
+
 			data := make([]byte, 512)
-			_, err := conn.Read(data)
+			dataSize, err := conn.Read(data)
+
+			dp := DataPacket{data, dataSize}
 
 			if err != nil {
-				chErr <- err
+				errChan <- err
 				return
 			}
 
-			ch <- data
+			readChan <- dp
 		}
-	}(ch, chErr) // <- to research
+	}(readChan, errChan)
 
 	ticker := time.Tick(time.Second)
 
-	isOver := false
 	for {
-		select {
-		case data := <-ch:
-			log.Println(parseData(data))
-		case err := <-chErr:
-			log.Println(err)
-
-			if err == io.EOF {
-				isOver = true
-			}
+		select { // study selecting channels
+		case dp := <-readChan:
+			dataString := dp.parse()
+			log.Println("Data Buffer:", dataString)
+		case err := <-errChan:
+			isOver = true
+			log.Println("Closing Stream:", err)
 
 			break
 		case <-ticker:
 			timeoutCount++
-			log.Println("timeout ...", timeoutCount)
+			log.Println("Idle Stream ...", timeoutCount)
 		}
 
 		if isOver == true {
-			timeoutCount = 0
-			close(ch)
-			close(chErr)
+			close(readChan)
+			close(errChan)
+
 			break
 		}
 	}
