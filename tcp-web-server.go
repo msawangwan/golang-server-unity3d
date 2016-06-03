@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"time"
 )
 
 const (
@@ -36,7 +35,7 @@ func listen() {
 		log.Fatal("Error Opening Listener Socket:", err)
 	}
 
-	log.Println("Accepting Connections on:", ADDR)
+	log.Println("Accepting Connections On:", ADDR)
 
 	defer sock.Close()
 	for {
@@ -55,13 +54,11 @@ func handleClientStream(conn net.Conn) {
 	defer conn.Close()
 
 	readStream(conn)
-	conn.Write([]byte("Reply"))
 }
 
 /* Reads data from a stream once a client establishes a connection. */
 func readStream(conn net.Conn) {
-	isOver := false
-	timeoutCount := 0
+	log.Println("Opening Stream For Read ... ")
 
 	readChan := make(chan DataPacket)
 	errChan := make(chan error)
@@ -84,24 +81,21 @@ func readStream(conn net.Conn) {
 		}
 	}(readChan, errChan)
 
-	ticker := time.Tick(time.Second)
+	var isReadComplete bool
 
 	for {
 		select { // study selecting channels
 		case dp := <-readChan:
 			dataString := dp.parse()
-			log.Println("Data Buffer:", dataString)
+			log.Println("Data Buffer Read:", dataString)
 		case err := <-errChan:
-			isOver = true
-			log.Println("Closing Stream:", err)
+			isReadComplete = true
+			log.Println("Closing Read Stream:", err)
 
 			break
-		case <-ticker:
-			timeoutCount++
-			log.Println("Idle Stream ...", timeoutCount)
 		}
 
-		if isOver == true {
+		if isReadComplete == true {
 			close(readChan)
 			close(errChan)
 
