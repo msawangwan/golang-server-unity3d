@@ -54,6 +54,7 @@ func handleClientStream(conn net.Conn) {
 	defer conn.Close()
 
 	readStream(conn)
+	log.Println("Terminating Client Connection")
 }
 
 /* Reads data from a stream once a client establishes a connection. */
@@ -78,6 +79,7 @@ func readStream(conn net.Conn) {
 			}
 
 			readChan <- dp
+			writeStream(conn)
 		}
 	}(readChan, errChan)
 
@@ -102,4 +104,13 @@ func readStream(conn net.Conn) {
 			break
 		}
 	}
+}
+
+func writeStream(conn net.Conn) {
+	log.Println("Writing to stream ... ")
+	msg := "This is the server reply kasdjasdjalkshd jklasd  jaskdh   sjadh asd jlaksjdhasjd jaskdh jda hjdashjkdlask \r\n"
+	//writeChan := make(chan string)
+	//writeChan <- msg
+	conn.Write([]byte(msg))
+	conn.Write([]byte(msg))
 }
