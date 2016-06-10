@@ -79,7 +79,7 @@ func readStream(conn net.Conn) {
 			}
 
 			readChan <- dp
-			writeStream(conn)
+			go writeStream(conn)
 		}
 	}(readChan, errChan)
 
@@ -106,11 +106,17 @@ func readStream(conn net.Conn) {
 	}
 }
 
+var hasSentOneMsg = false
+
 func writeStream(conn net.Conn) {
-	log.Println("Writing to stream ... ")
-	msg := "This is the server reply kasdjasdjalkshd jklasd  jaskdh   sjadh asd jlaksjdhasjd jaskdh jda hjdashjkdlask \r\n"
-	//writeChan := make(chan string)
-	//writeChan <- msg
-	conn.Write([]byte(msg))
-	conn.Write([]byte(msg))
+	if hasSentOneMsg == false {
+		log.Println("Writing to stream ... ")
+		msg := "This is the server. Only the server can write this reply. If the server is not replying, you will not see this server reply. End of the Message.Te \r\n"
+		log.Println(len(msg))
+		//writeChan := make(chan string)
+		//writeChan <- msg
+		conn.Write([]byte(msg))
+		conn.Write([]byte(msg))
+		//hasSentOneMsg = true
+	}
 }
