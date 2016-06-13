@@ -68,7 +68,7 @@ func readStream(conn net.Conn) {
 		for {
 			log.Println("Reading Stream ....")
 
-			data := make([]byte, 512)
+			data := make([]byte, 1024)
 			dataSize, err := conn.Read(data)
 
 			dp := DataPacket{data, dataSize}
