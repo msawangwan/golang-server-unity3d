@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	//"io"
 	"log"
 	"net"
 	"os"
@@ -24,10 +23,10 @@ func (dp DataPacket) parse() string {
 
 /* Decodes an array of bytes that represents a data frame, from Network Byte Order into an associated uint32 value and adds them to a slice to be returned. */
 func (dp DataPacket) decodeNBO() []uint32 {
-	decodedFrame := make([]uint32, 256)
-	var start, end, offset = 0, 4, 0
+	decodedFrame := make([]uint32, 0, 256)
+	var start, end = 0, 4
 
-	for i := 0; i < 1024; i++ { // TODO: get the num iterations based on the size of the stream of data
+	for i := 0; i < dp.size; i++ {
 		if i%4 == 0 {
 			var currentVal uint32
 
@@ -39,8 +38,7 @@ func (dp DataPacket) decodeNBO() []uint32 {
 				log.Println("Failed To Decode DataFrame:", err)
 			}
 
-			decodedFrame[offset] = currentVal
-			offset++
+			decodedFrame = append(decodedFrame, currentVal)
 
 			start += 4
 			end += 4
@@ -50,29 +48,24 @@ func (dp DataPacket) decodeNBO() []uint32 {
 	return decodedFrame
 }
 
-func (dp DataPacket) encodeNBO(decodedDataFrame []uint32) []byte {
-	encodedFrame := make([]byte, 1024) // use len(dp.data)
-	frame := bytes.NewBuffer(encodedFrame)
-	//frame := bytes.NewReader(encodedFrame)
-	offset := 0
+/* Encodes a slice of decoded data into a slice of bytes, in network byte order. */
+func (dp DataPacket) encodeNBO(decodedFrame []uint32) []byte {
+	encodedFrame := make([]byte, 0, 1024)
 
-	for i := 0; i < 256; i++ { // TODO: see comment in decoding func
-		var currentVal uint32
+	for i := 0; i < len(decodedFrame); i++ {
+		currentVal := decodedFrame[i]
 
-		currentVal = decodedDataFrame[i]
-		//buf := make([]byte, 4)
-		buf := new(bytes.Buffer)
+		buf := &bytes.Buffer{} // OR: buf := new(bytes.buffer)
+
 		err := binary.Write(buf, binary.BigEndian, currentVal)
-
 		if err != nil {
 			log.Println("Failed To Encode DataFrame:", err)
 		}
 
-		frame.WriteAt(buf, offset)
-		offset += 4
+		encodedFrame = append(encodedFrame, buf.Bytes()...)
 	}
 
-	return frame.Bytes()
+	return encodedFrame
 }
 
 func init() {
@@ -124,10 +117,11 @@ func readStream(conn net.Conn) {
 		for {
 			log.Println("Waiting For Client Activity ...")
 
-			data := make([]byte, 1024)
-			dataSize, err := conn.Read(data)
+			recvBuffer := make([]byte, 1024)
+			bytesRead, err := conn.Read(recvBuffer)
 
-			dp := DataPacket{data, dataSize}
+			data := recvBuffer[:bytesRead]
+			dp := DataPacket{data, len(data)}
 
 			if err != nil {
 				errChan <- err
@@ -135,7 +129,6 @@ func readStream(conn net.Conn) {
 			}
 
 			readChan <- dp
-			//go writeStream(conn, dp)
 		}
 	}(readChan, errChan)
 
@@ -171,5 +164,12 @@ func writeStream(conn net.Conn, dataFrame []byte) {
 	//writeChan := make(chan string)
 	//writeChan <- msg
 	//conn.Write([]byte(msg))
+	frameSize := len(dataFrame)
+	log.Println("Size Of DataFrame:", frameSize)
+
+	encodedSize := make([]byte, 4)
+	binary.BigEndian.PutUint32(encodedSize, uint32(frameSize))
+
+	conn.Write(encodedSize)
 	conn.Write(dataFrame)
 }
