@@ -72,12 +72,8 @@ func init() {
 	log.SetOutput(os.Stdout)
 }
 
-func main() {
-	listen()
-}
-
 /* Listens for incoming client connections and handles them via goroutines. */
-func listen() {
+func Listen() {
 	sock, err := net.Listen("tcp", ADDR)
 
 	if err != nil {
