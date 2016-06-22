@@ -11,13 +11,21 @@ type ClientHandler struct {
 	sessionID  int
 }
 
+func New(conn net.Conn, uuid int, sessionid int) *ClientHandler {
+	return &ClientHandler{
+		connection: conn,
+		UUID:       uuid,
+		sessionID:  sessionid,
+	}
+}
+
 func (c *ClientHandler) Recv() {
 	log.Println("Waiting For Request.")
 
-	recvCh := make(chan DataFrame)
+	recvCh := make(chan DataFrameInt)
 	errCh := make(chan error)
 
-	go func(recvCh chan DataFrame, errCh chan error) {
+	go func(recvCh chan DataFrameInt, errCh chan error) {
 		for {
 			recvBuffer := make([]byte, 1024)
 
@@ -28,35 +36,38 @@ func (c *ClientHandler) Recv() {
 			}
 
 			data := recvBuffer[:bytesRead]
-			df := DataFrame{
-				payload: data,
-				size: len(data),
+			df := DataFrameInt{
+				payloadEncoded: data,
+				size:           len(data),
 			}
 
 			readCh <- df
-		}(readCh, errCh)
-	}
+		}
+	}(readCh, errCh)
 
-		var hasDisconnected bool
+	var hasDisconnected bool
 
-		for {
-			select {
-			case df := <-readCh:
-				dataFrame, err := df.DecodeNetworkByteOrder()
-				if err != nil {
-					log.Println(err)
-				}
-			case err := <-errCh:
-				hasDisconnected = true
+	for {
+		select {
+		case df := <-readCh:
+			err := df.DecodeIntNetworkByteOrder()
+			if err != nil {
 				log.Println(err)
-				break
 			}
+		case err := <-errCh:
+			hasDisconnected = true
+			log.Println(err)
+			break
+		}
 
-			if hasDisconnected == true {
-				close(readCh)
-				close(errCh)
-				break
-			}
+		if hasDisconnected == true {
+			close(readCh)
+			close(errCh)
+			break
 		}
 	}
+}
+
+func (c *ClientHandler) Send(dataFrame *DataFrameInt) {
+	frameSize := dataFrame.Size
 }
