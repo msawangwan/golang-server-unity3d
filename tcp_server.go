@@ -155,11 +155,6 @@ func readStream(conn net.Conn) {
 
 func writeStream(conn net.Conn, dataFrame []byte) {
 	log.Println("Writing to stream ... ")
-	//msg := "This is the server. Only the server can write this reply. If the server is not replying, you will not see this server reply. End of the Message.Te \r\n"
-	//log.Println(len(msg))
-	//writeChan := make(chan string)
-	//writeChan <- msg
-	//conn.Write([]byte(msg))
 	frameSize := len(dataFrame)
 	log.Println("Size Of DataFrame:", frameSize)
 
