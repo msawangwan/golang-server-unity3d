@@ -8,66 +8,26 @@ import (
 type ClientHandler struct {
 	connection net.Conn
 	UUID       int
-	sessionID  int
+	sendCh     chan []byte
+	recvCh     chan []byte
 }
 
-func New(conn net.Conn, uuid int, sessionid int) *ClientHandler {
+func New(conn net.Conn, uuid int) *ClientHandler {
 	return &ClientHandler{
 		connection: conn,
 		UUID:       uuid,
-		sessionID:  sessionid,
+		sendCh:     make(chan []byte),
+		recvCh:     make(chan []byte),
 	}
 }
 
-func (c *ClientHandler) Recv() {
-	log.Println("Waiting For Request.")
-
-	recvCh := make(chan DataFrameInt)
-	errCh := make(chan error)
-
-	go func(recvCh chan DataFrameInt, errCh chan error) {
-		for {
-			recvBuffer := make([]byte, 1024)
-
-			bytesRead, err := c.connection.Read(recvBuffer)
-			if err != nil {
-				errCh <- err
-				return
-			}
-
-			data := recvBuffer[:bytesRead]
-			df := DataFrameInt{
-				payloadEncoded: data,
-				size:           len(data),
-			}
-
-			readCh <- df
-		}
-	}(readCh, errCh)
-
-	var hasDisconnected bool
-
+func (ch *ClientHandler) MoniterConnection() {
 	for {
 		select {
-		case df := <-readCh:
-			err := df.DecodeIntNetworkByteOrder()
-			if err != nil {
-				log.Println(err)
-			}
-		case err := <-errCh:
-			hasDisconnected = true
-			log.Println(err)
-			break
-		}
-
-		if hasDisconnected == true {
-			close(readCh)
-			close(errCh)
-			break
+		case read := <-ch.sendCh:
+			log.Println("reading", string(read))
+		case write := <-ch.writeCh:
+			log.Println("writing", string(write))
 		}
 	}
-}
-
-func (c *ClientHandler) Send(dataFrame *DataFrameInt) {
-	frameSize := dataFrame.Size
 }

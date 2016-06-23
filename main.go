@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	Listen()
+	server := ServerCore.New(":9080")
 }
