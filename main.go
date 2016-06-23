@@ -1,5 +1,7 @@
 package main
 
 func main() {
-	server := ServerCore.New(":9080")
+	server := NewServerInstance(":9081")
+	server.Start()
+	server.Shutdown()
 }

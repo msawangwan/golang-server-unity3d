@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"sync"
 	"sync/atomic"
 )
@@ -14,7 +15,7 @@ type ClientController struct {
 	muConns sync.Mutex
 }
 
-func New() *ClientController {
+func NewClientController() *ClientController {
 	return &ClientController{
 		Conns:   make(ConnectedClients),
 		muConns: &sync.Mutex{},
@@ -23,9 +24,11 @@ func New() *ClientController {
 
 /* Must be run as a goroutine, created per client connection. */
 func (cc *ClientController) HandleClientConnection(conn net.Conn) {
+	log.Println("handling new client conn")
+	defer conn.Close()
 	atomic.AddInt64(&idCounter, 1)
 	id := atomic.LoadInt64(&idCounter)
-	newClient := ClientHandler.New(conn, id)
+	newClient := NewClientConnection(conn, id)
 
 	cc.muConns.Lock()
 	cc.Conns[newClient.UUID] = newClient

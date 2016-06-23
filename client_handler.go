@@ -12,7 +12,7 @@ type ClientHandler struct {
 	recvCh     chan []byte
 }
 
-func New(conn net.Conn, uuid int) *ClientHandler {
+func NewClientConnection(conn net.Conn, uuid int) *ClientHandler {
 	return &ClientHandler{
 		connection: conn,
 		UUID:       uuid,
