@@ -51,6 +51,7 @@ func (server *ServerCore) run() {
 		if err != nil {
 			log.Fatal("Error on accepting client connection: ", err)
 		}
+		log.Println("new client connecting ...")
 		go server.ClientCtr.HandleClientConnection(conn)
 	}
 }
