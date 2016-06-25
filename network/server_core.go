@@ -1,4 +1,4 @@
-package main
+package network
 
 import (
 	"log"
@@ -12,16 +12,19 @@ type ServerCore struct {
 	ClientCtr      *ClientController
 	ListenerSocket net.Listener // consider using unexported fields
 	ListenerWG     sync.WaitGroup
+	*ServerLogger
 }
 
 func NewServerInstance(addr string) *ServerCore {
 	return &ServerCore{
-		HostAddr:  addr,
-		ClientCtr: NewClientController(),
+		HostAddr:     addr,
+		ClientCtr:    NewClientController(),
+		ServerLogger: NewServerLogger(),
 	}
 }
 
 func (server *ServerCore) Start() {
+	server.setup()
 	server.bind()
 
 	server.ListenerWG.Add(1)
@@ -33,25 +36,29 @@ func (server *ServerCore) Shutdown() {
 	server.ListenerWG.Wait()
 }
 
+func (server *ServerCore) setup() {
+	server.LogInfo("Server core starting ...")
+}
+
 func (server *ServerCore) bind() {
 	lnSock, err := net.Listen("tcp", server.HostAddr)
 	if err != nil {
-		log.Fatalf("Error on server bind to socket: ", err)
+		server.LogFatalAlert("Error on server bind to socket: ", err)
 	}
 
 	server.ListenerSocket = lnSock
 }
 
 func (server *ServerCore) run() {
-	log.Println("Server running ...")
+	server.LogInfo("Server core running ...")
 	defer server.ListenerWG.Done()
 
 	for {
 		conn, err := server.ListenerSocket.Accept()
 		if err != nil {
-			log.Fatal("Error on accepting client connection: ", err)
+			server.LogFatalAlert("Error on accepting client connection: ", err)
 		}
-		log.Println("new client connecting ...")
+		server.LogInfo("new client connecting ...")
 		go server.ClientCtr.HandleClientConnection(conn)
 	}
 }

@@ -1,7 +1,11 @@
 package main
 
+import (
+	"github.com/msawangwan/unity-server/network"
+)
+
 func main() {
-	server := NewServerInstance(":9081")
+	server := network.NewServerInstance(":9081")
 	server.Start()
 	server.Shutdown()
 }

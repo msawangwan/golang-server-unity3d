@@ -1,0 +1,9 @@
+[WARNING] 2016/06/24 23:23:33 server_logger.go:46: testyy
+[WARNING] 2016/06/24 23:41:20 server_logger.go:54: testyy
+[WARNING] 2016/06/24 23:43:04 server_logger.go:38: testyy
+[WARNING] 2016/06/24 23:48:19 server_logger.go:38: testyy
+[WARNING] 2016/06/24 23:48:37 server_logger.go:38: testyy
+[WARNING] 2016/06/24 23:49:09 server_logger.go:38: testyy
+[WARNING] 2016/06/24 23:50:34 server_logger.go:38: [ALERT]  testyy
+[WARNING] 2016/06/24 23:51:14 server_logger.go:38: [  testyy  ]
+[WARNING] 2016/06/24 23:54:58 server_logger.go:38: [  testyy  ]
