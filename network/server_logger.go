@@ -8,7 +8,7 @@ import (
 
 /* The server logger, prints in various formats to various outputs. */
 type ServerLogger struct {
-	info       *log.Logger
+	status     *log.Logger
 	debug      *log.Logger
 	trace      *log.Logger
 	warning    *log.Logger
@@ -23,7 +23,7 @@ func NewServerLogger() *ServerLogger {
 	}
 
 	return &ServerLogger{
-		info:       log.New(os.Stdout, "[INFO] ", log.Ltime),
+		status:     log.New(os.Stdout, "[INFO] ", log.Ltime),
 		debug:      log.New(os.Stdout, "[DEBUG] ", log.Ldate|log.Ltime),
 		warning:    log.New(io.MultiWriter(logfile, os.Stdout), "[WARNING] ", log.Ldate|log.Ltime|log.Lshortfile),
 		alertFatal: log.New(io.MultiWriter(logfile, os.Stdout), "[ALERT] ", log.Ldate|log.Ltime|log.Lshortfile),
@@ -53,8 +53,8 @@ func printLog(logger interface{}, msgs []interface{}, isFatal bool) {
 }
 
 /* Non-verbose. */
-func (sl *ServerLogger) LogInfo(msgs ...interface{}) {
-	printLog(sl.info, msgs, false)
+func (sl *ServerLogger) LogStatus(msgs ...interface{}) {
+	printLog(sl.status, msgs, false)
 }
 
 /* Semi-verbose. */

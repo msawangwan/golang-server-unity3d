@@ -7,5 +7,5 @@ import (
 func main() {
 	server := network.NewServerInstance(":9081")
 	server.Start()
-	server.Shutdown()
+	server.Shutdown(false)
 }

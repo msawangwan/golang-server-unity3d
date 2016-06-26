@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 )
 
-var idCounter int64 = 0
+var idCounter int64 = 0 // placeholder implementation of id
 
 /* Map of current connections by UUID. */
 type ConnectedClients map[int]*ClientHandler
