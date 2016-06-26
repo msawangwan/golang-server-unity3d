@@ -29,9 +29,10 @@ func NewClientHandler(conn net.Conn, uuid int) *ClientHandler {
 }
 
 /* Moniter the client conn stream as it sends/recvs data (or disconnects). */
-func (ch *ClientHandler) Moniter() {
+func (ch *ClientHandler) Moniter(connStatus chan error) {
 	go ch.stream()
-	ch.handleStreamData()
+	status := ch.handleStreamData()
+	connStatus <- status
 }
 
 func (ch *ClientHandler) stream() {
@@ -53,7 +54,7 @@ func (ch *ClientHandler) stream() {
 	}
 }
 
-func (ch *ClientHandler) handleStreamData() {
+func (ch *ClientHandler) handleStreamData() error {
 	defer ch.connection.Close()
 	defer close(ch.sendChan)
 	defer close(ch.recvChan)
@@ -67,7 +68,8 @@ func (ch *ClientHandler) handleStreamData() {
 			log.Println("recving", recv)
 		case disconnect := <-ch.disconnectedChan:
 			log.Println("client disconnected", disconnect)
-			break
+			return disconnect
+			//break
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package network
 
 import (
-	"log"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -14,20 +13,25 @@ type ConnectedClients map[int]*ClientHandler
 
 /* Manages client connections. */
 type ClientController struct {
-	Conns      ConnectedClients
-	sync.Mutex // use to lock access to the connected clients map
+	Conns         ConnectedClients
+	ActiveConnsWG sync.WaitGroup
+	sync.Mutex    // use to lock access to the connected clients map
+	*ServerLogger
 }
 
 /* Create a client controller -- one instances handles all clients. */
 func NewClientController() *ClientController {
 	return &ClientController{
-		Conns: make(ConnectedClients),
+		Conns:        make(ConnectedClients),
+		ServerLogger: NewServerLogger(),
 	}
 }
 
 /* Must be run as a goroutine, created per client connection. */
 func (cc *ClientController) HandleClientConnection(conn net.Conn) {
-	log.Println("handling new client conn")
+	cc.LogStatus("Handling new client conn ...")
+
+	clientConnStatus := make(chan error)
 
 	atomic.AddInt64(&idCounter, 1)
 	id := atomic.LoadInt64(&idCounter)
@@ -35,8 +39,11 @@ func (cc *ClientController) HandleClientConnection(conn net.Conn) {
 
 	cc.Lock()
 	cc.Conns[newClient.UUID] = newClient
-	log.Println("current num active conns: ", len(cc.Conns))
+	cc.LogStatus("Current number of active conns: ", len(cc.Conns))
 	cc.Unlock()
 
-	go newClient.Moniter()
+	cc.ActiveConnsWG.Add(1)
+	go newClient.Moniter(clientConnStatus)
+	// TODO: read channel from client connection on disconnect
+	//go func() {
 }

@@ -20,8 +20,8 @@ func NewServerInstance(addr string) *ServerCore {
 	server := &ServerCore{
 		HostAddr:     addr,
 		ClientCtr:    NewClientController(),
-		ServerLogger: NewServerLogger(),
 		killSignal:   make(chan bool, 1),
+		ServerLogger: NewServerLogger(),
 	}
 
 	server.ListenerWG.Add(1)
@@ -41,6 +41,7 @@ func (server *ServerCore) Shutdown(shutdownNow bool) {
 		defer server.ListenerSocket.Close()
 	}
 
+	server.ClientCtr.ActiveConnsWG.Wait() // TODO: need to call done for this wg
 	server.ListenerWG.Wait()
 }
 

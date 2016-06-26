@@ -6,3 +6,7 @@
 [ALERT] 2016/06/25 18:40:00 server_logger.go:53: [FATAL] accept tcp [::]:9081: use of closed network connection
 [ALERT] 2016/06/25 19:48:13 server_logger.go:40: [  Error occur binding to socket:   ]
 [ALERT] 2016/06/25 19:48:13 server_logger.go:53: [FATAL] listen tcp: missing port in address 9081
+[ALERT] 2016/06/25 23:12:31 server_logger.go:40: [  Error occur binding to socket:   ]
+[ALERT] 2016/06/25 23:12:31 server_logger.go:53: [FATAL] listen tcp :9081: bind: address already in use
+[ALERT] 2016/06/25 23:14:08 server_logger.go:40: [  Error occur binding to socket:   ]
+[ALERT] 2016/06/25 23:14:08 server_logger.go:53: [FATAL] listen tcp :9081: bind: address already in use
