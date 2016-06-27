@@ -6,11 +6,10 @@ import (
 	"time"
 )
 
-const mockHostAddr = ":9081"
-
 /* Does the server start and shutdown without issues? */
 func TestServerStartAndShutdown(t *testing.T) {
 	t.Log("\tDoes the server start and shutdown when signaled?")
+	mockHostAddr := ":9081"
 	mockServer := NewServerInstance(mockHostAddr)
 	mockServer.Start()
 	mockServer.Shutdown(true)
@@ -20,6 +19,7 @@ func TestServerStartAndShutdown(t *testing.T) {
 /* Can the server enter the listen loop and exit cleanly? */
 func TestServerStartAndRunAndShutdown(t *testing.T) {
 	t.Log("\tDoes the server start, listen and shutdown when signaled?")
+	mockHostAddr := ":9081"
 	mockServer := NewServerInstance(mockHostAddr)
 	mockServer.Start()
 	for i := 0; i < 5; i++ {

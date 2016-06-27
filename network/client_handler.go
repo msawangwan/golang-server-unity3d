@@ -31,8 +31,10 @@ func NewClientHandler(conn net.Conn, uuid int) *ClientHandler {
 /* Moniter the client conn stream as it sends/recvs data (or disconnects). */
 func (ch *ClientHandler) Moniter(connStatus chan error) {
 	go ch.stream()
-	status := ch.handleStreamData()
-	connStatus <- status
+	defer close(connStatus) // closing the chan sends a disconn signal
+	ch.handleStreamData()
+	//status := ch.handleStreamData()
+	//connStatus <- status
 }
 
 func (ch *ClientHandler) stream() {
@@ -54,6 +56,8 @@ func (ch *ClientHandler) stream() {
 	}
 }
 
+/* Detects read/write ops on a stream - returns an error that represents a
+disconnect signal when the client has closed the connection. */
 func (ch *ClientHandler) handleStreamData() error {
 	defer ch.connection.Close()
 	defer close(ch.sendChan)
@@ -69,7 +73,6 @@ func (ch *ClientHandler) handleStreamData() error {
 		case disconnect := <-ch.disconnectedChan:
 			log.Println("client disconnected", disconnect)
 			return disconnect
-			//break
 		}
 	}
 }

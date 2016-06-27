@@ -33,7 +33,7 @@ func (cc *ClientController) HandleClientConnection(conn net.Conn) {
 
 	clientConnStatus := make(chan error)
 
-	atomic.AddInt64(&idCounter, 1)
+	atomic.AddInt64(&idCounter, 1) // TODO: decrement
 	id := atomic.LoadInt64(&idCounter)
 	newClient := NewClientHandler(conn, int(id))
 
@@ -43,7 +43,11 @@ func (cc *ClientController) HandleClientConnection(conn net.Conn) {
 	cc.Unlock()
 
 	cc.ActiveConnsWG.Add(1)
+	defer cc.ActiveConnsWG.Done()
 	go newClient.Moniter(clientConnStatus)
-	// TODO: read channel from client connection on disconnect
+	// TODO: wrap the activeconn dever and <-clientconnstatus in a go func()
 	//go func() {
+	cc.LogStatus("Waiting for closed conn ...")
+	<-clientConnStatus // block until we get a closed notification
+	cc.LogStatus("Detected a closed client connection")
 }
