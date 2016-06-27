@@ -30,14 +30,14 @@ func NewClientHandler(conn net.Conn, uuid int) *ClientHandler {
 
 /* Moniter the client conn stream as it sends/recvs data (or disconnects). */
 func (ch *ClientHandler) Moniter(connStatus chan error) {
-	go ch.stream()
+	go ch.beginReadStream()
 	defer close(connStatus) // closing the chan sends a disconn signal
 	ch.handleStreamData()
 	//status := ch.handleStreamData()
 	//connStatus <- status
 }
 
-func (ch *ClientHandler) stream() {
+func (ch *ClientHandler) beginReadStream() {
 	for {
 		log.Println("stream ready")
 		recvBuffer := make([]byte, RECV_BUFFER_MAX_SIZE)
@@ -49,11 +49,19 @@ func (ch *ClientHandler) stream() {
 				return
 			}
 			log.Println("error on recv", err)
+			continue
 		}
 
 		data := recvBuffer[:bytesRead]
 		ch.recvChan <- data
 	}
+}
+
+/* TODO: change from []byte to a struct with fields lenPrefix and encoded */
+func (ch *ClientHandler) beginWriteStream(encodedData []byte) {
+	lenPrefix := len(encodedData)
+	ch.connection.Write(lenPrefix)
+	ch.connection.Write(encodedData)
 }
 
 /* Detects read/write ops on a stream - returns an error that represents a

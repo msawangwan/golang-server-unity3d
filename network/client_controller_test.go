@@ -17,7 +17,7 @@ func TestASingleClientConnection(t *testing.T) {
 	go func() {
 		conn, err := net.Dial("tcp", mockHostAddr)
 		if err != nil {
-			t.Fatal("\t\tMock client failed to establish a connection to the server. [", util.FailMark, "]")
+			t.Fatal("\t\tMock client failed to establish a connection to the server. [ ", util.FailMark, " ]")
 		}
 		//t.Log("\t\t\tClient connection handled ...")
 		time.Sleep(3000 * time.Millisecond)
@@ -27,5 +27,5 @@ func TestASingleClientConnection(t *testing.T) {
 	}()
 
 	time.Sleep(5000 * time.Millisecond)
-	t.Log("\t\tClient Controller was able to handle a single client connection. [", util.PassMark, "]")
+	t.Log("\t\tClient Controller was able to handle a single client connection. [ ", util.PassMark, " ]")
 }

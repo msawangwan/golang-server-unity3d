@@ -31,7 +31,7 @@ func NewClientController() *ClientController {
 func (cc *ClientController) HandleClientConnection(conn net.Conn) {
 	cc.LogStatus("Handling new client conn ...")
 
-	clientConnStatus := make(chan error)
+	clientConnStatus := make(chan error) // closed by the client handler
 
 	atomic.AddInt64(&idCounter, 1) // TODO: decrement
 	id := atomic.LoadInt64(&idCounter)
