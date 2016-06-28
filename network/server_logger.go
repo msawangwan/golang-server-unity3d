@@ -1,10 +1,13 @@
 package network
 
 import (
+	"flag"
 	"io"
 	"log"
 	"os"
 )
+
+var LoggingIsEnabled bool = flag.Bool("Debug", false, "Enable Logging")
 
 /* The server logger, prints in various formats to various outputs. */
 type ServerLogger struct {
@@ -13,6 +16,13 @@ type ServerLogger struct {
 	trace      *log.Logger
 	warning    *log.Logger
 	alertFatal *log.Logger
+}
+
+func init() {
+	flag.Parse()
+	if *LoggingIsEnabled {
+		log.Println("Logging Enabled.")
+	}
 }
 
 /* Create an instance of type ServerLogger. */

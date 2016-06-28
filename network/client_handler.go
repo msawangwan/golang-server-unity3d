@@ -57,6 +57,23 @@ func (ch *ClientHandler) beginReadStream() {
 	}
 }
 
+/* TODO: implement a 'read lenprefix'. */
+func (ch *ClientHandler) beginRecvStream(headerByteSize int) {
+	headerBuffer := make([]byte, headerByteSize)
+	for {
+		var headerReadError error
+		var totalBytesRead, bytesRead = 0, 0
+
+		for totalBytesRead < headerByteSize && headerReadError != nil {
+			bytesRead, headerReadError = ch.Read(headerBuffer[totalBytesRead:])
+			// ...
+			// handle any errors encountered, if EOF, get the bytes read first
+			// ...
+			totalBytesRead += bytesRead
+		}
+	}
+}
+
 /* TODO: change from []byte to a struct with fields lenPrefix and encoded */
 func (ch *ClientHandler) beginWriteStream(encodedData []byte) {
 	lenPrefix := len(encodedData)
