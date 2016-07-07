@@ -1,5 +1,5 @@
-#Unity Web Server
+#Golang Game Server
 
-###Use:
+###About:
 
-	- Facilitates communication between unity client and golang web server
+	- For Unity3D
